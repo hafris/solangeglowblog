@@ -15,7 +15,7 @@ SECRET_KEY = config('SECRET_KEY', default='dev-secret')
 DEBUG = config('DEBUG', default=False, cast=bool)
 ALLOWED_HOSTS = config(
     'ALLOWED_HOSTS',
-    default='localhost,127.0.0.1,solangeglowblog-production.up.railway.app',
+    default='localhost,127.0.0.1,solangeglowblog-production.up.railway.app,api.blog.solangeglow.com',
     cast=Csv()
 )
 
@@ -120,12 +120,12 @@ EMAIL_SSL_CONTEXT = ssl._create_unverified_context()
 # Configuration CORS
 CORS_ALLOWED_ORIGINS = config(
     'CORS_ALLOWED_ORIGINS',
-    default='http://localhost:3000,http://localhost:5173,http://localhost:5174,https://solangeglowblog-production.up.railway.app',
+    default='http://localhost:3000,http://localhost:5173,http://localhost:5174,https://solangeglowblog-production.up.railway.app,https://api.blog.solangeglow.com',
     cast=Csv()
 )
 CSRF_TRUSTED_ORIGINS = config(
     'CSRF_TRUSTED_ORIGINS',
-    default='http://localhost:3000,http://localhost:5173,http://localhost:5174,https://solangeglowblog-production.up.railway.app',
+    default='http://localhost:3000,http://localhost:5173,http://localhost:5174,https://solangeglowblog-production.up.railway.app,https://api.blog.solangeglow.com',
     cast=Csv()
 )
 CORS_ALLOW_CREDENTIALS = True
