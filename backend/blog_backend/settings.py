@@ -117,9 +117,6 @@ EMAIL_HOST_USER = config('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 EMAIL_SSL_CONTEXT = ssl._create_unverified_context()
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=Csv())
-
-
 # Configuration CORS
 CORS_ALLOWED_ORIGINS = config(
     'CORS_ALLOWED_ORIGINS',
@@ -167,6 +164,9 @@ SECURE_HSTS_INCLUDE_SUBDOMAINS = False
 SECURE_HSTS_PRELOAD = False  
 
 # Logging
+LOGS_DIR = BASE_DIR / 'logs'
+os.makedirs(LOGS_DIR, exist_ok=True)
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -174,22 +174,25 @@ LOGGING = {
         'file': {
             'level': 'WARNING',
             'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_DIR, 'logs/auth.log'),
+            'filename': os.path.join(LOGS_DIR, 'auth.log'),
         },
         'posts_file': {  
             'level': 'INFO',
             'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_DIR, 'logs/posts.log'),
+            'filename': os.path.join(LOGS_DIR, 'posts.log'),
+        },
+        'console': {
+            'class': 'logging.StreamHandler',
         },
     },
     'loggers': {
         'users': {
-            'handlers': ['file'],
+            'handlers': ['console'] if not DEBUG else ['file'],
             'level': 'WARNING',
             'propagate': True,
         },
         'posts': {  
-            'handlers': ['posts_file'],
+            'handlers': ['console'] if not DEBUG else ['posts_file'],
             'level': 'INFO',
             'propagate': True,
         },
