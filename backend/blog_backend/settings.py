@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 from datetime import timedelta
-from decouple import config
+from decouple import config, Csv
 import logging
 import ssl
 from django.core.mail.backends.smtp import EmailBackend
@@ -11,9 +11,13 @@ import dj_database_url
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Secrets
-SECRET_KEY = config('SECRET_KEY')
-DEBUG = True  
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+SECRET_KEY = config('SECRET_KEY', default='dev-secret')
+DEBUG = config('DEBUG', default=False, cast=bool)
+ALLOWED_HOSTS = config(
+    'ALLOWED_HOSTS',
+    default='localhost,127.0.0.1,solangeglowblog-production.up.railway.app',
+    cast=Csv()
+)
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -32,8 +36,9 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -68,7 +73,10 @@ OPENROUTER_API_KEY = config('OPENROUTER_API_KEY')
 DATABASE_URL = config("DATABASE_URL", default=None)
 
 if DATABASE_URL:
-     # Utilisé en local
+    DATABASES = {
+        'default': dj_database_url.config(default=DATABASE_URL, conn_max_age=600, ssl_require=not DEBUG)
+    }
+else:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
@@ -78,11 +86,6 @@ if DATABASE_URL:
             'HOST': config('DATABASE_HOST', default='localhost'),
             'PORT': config('DATABASE_PORT', default='5432'),
         }
-    }
-else:
-    # Utilisé en production sur Render
-    DATABASES = {
-        'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600, ssl_require=True)
     }
    
 
@@ -114,20 +117,20 @@ EMAIL_HOST_USER = config('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 EMAIL_SSL_CONTEXT = ssl._create_unverified_context()
 
-ALLOWED_HOSTS = [
-    'localhost',
-    '127.0.0.1',
-    'it-project-private.onrender.com' 
-]
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=Csv())
 
 
 # Configuration CORS
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://localhost:5173",
-    "http://localhost:5174",
-    "https://it-project-private.onrender.com",
-]
+CORS_ALLOWED_ORIGINS = config(
+    'CORS_ALLOWED_ORIGINS',
+    default='http://localhost:3000,http://localhost:5173,http://localhost:5174,https://solangeglowblog-production.up.railway.app',
+    cast=Csv()
+)
+CSRF_TRUSTED_ORIGINS = config(
+    'CSRF_TRUSTED_ORIGINS',
+    default='http://localhost:3000,http://localhost:5173,http://localhost:5174,https://solangeglowblog-production.up.railway.app',
+    cast=Csv()
+)
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_METHODS = [
     'DELETE',
@@ -158,8 +161,8 @@ CSRF_COOKIE_SECURE = False
 CSRF_COOKIE_SAMESITE = 'Lax'
 
 # Sécurité HTTPS
-SECURE_SSL_REDIRECT = False  
-SECURE_HSTS_SECONDS = 0  
+SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', default=False, cast=bool)
+SECURE_HSTS_SECONDS = config('SECURE_HSTS_SECONDS', default=0, cast=int)
 SECURE_HSTS_INCLUDE_SUBDOMAINS = False  
 SECURE_HSTS_PRELOAD = False  
 
@@ -220,6 +223,7 @@ LANGUAGE_CODE = 'fr-fr'
 TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 PASSWORD_RESET_TOKEN_SECRET = config('PASSWORD_RESET_TOKEN_SECRET')
