@@ -3,6 +3,9 @@ import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
 import './index.css'
 import './tailwind-test.css'
+import { setupAxiosInterceptors } from './utils/axiosConfig'
+
+setupAxiosInterceptors()
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

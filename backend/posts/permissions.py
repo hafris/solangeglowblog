@@ -10,6 +10,9 @@ class IsAuthenticatedByRefreshToken(permissions.BasePermission):
     message = "Vous devez être connecté pour effectuer cette action."  
 
     def has_permission(self, request, view):
+        if request.user and request.user.is_authenticated:
+            return True
+
         refresh_token = request.COOKIES.get('refresh_token')
 
         if not refresh_token:
