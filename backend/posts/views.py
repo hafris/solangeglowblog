@@ -79,6 +79,7 @@ class SuggestImprovementsView(APIView):
                 top_p=1.0,
                 frequency_penalty=0.0,
                 presence_penalty=0.0,
+                timeout=60,
             )
 
             rewritten = (response.choices[0].text or "").strip()
@@ -106,6 +107,13 @@ class SuggestImprovementsView(APIView):
             return Response(
                 {"error": "Service IA temporairement indisponible"},
                 status=status.HTTP_502_BAD_GATEWAY
+            )
+
+        except Timeout as e:
+            logger.error(f"Timeout IA : {e}")
+            return Response(
+                {"error": "Le service IA a mis trop de temps à répondre"},
+                status=status.HTTP_504_GATEWAY_TIMEOUT
             )
 
         except OpenAIError as e:
