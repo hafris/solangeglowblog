@@ -1,6 +1,6 @@
 # posts/permissions.py
 from rest_framework import permissions
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from django.contrib.auth import get_user_model
 
@@ -13,10 +13,33 @@ class IsAuthenticatedByRefreshToken(permissions.BasePermission):
         if request.user and request.user.is_authenticated:
             return True
 
+        auth_header = request.META.get('HTTP_AUTHORIZATION', '')
+        if auth_header.startswith('Bearer '):
+            access_token = auth_header.split(' ', 1)[1].strip()
+            if access_token:
+                try:
+                    token = AccessToken(access_token)
+                    user_id = token.payload.get('user_id')
+                    if not user_id:
+                        self.message = "Utilisateur non trouvé dans le token."
+                        return False
+                    user = User.objects.get(id=user_id)
+                    if not user.is_active:
+                        self.message = "Cet utilisateur est désactivé."
+                        return False
+                    request.user = user
+                    return True
+                except (InvalidToken, TokenError):
+                    self.message = "Access token invalide ou expiré."
+                    return False
+                except User.DoesNotExist:
+                    self.message = "Utilisateur associé au token non trouvé."
+                    return False
+
         refresh_token = request.COOKIES.get('refresh_token')
 
         if not refresh_token:
-            self.message = "Aucun token trouvé dans les cookies. Veuillez vous connecter."
+            self.message = "Aucun token trouvé (ni Authorization ni cookies). Veuillez vous connecter."
             return False
 
         try:

@@ -8,9 +8,13 @@ from rest_framework.permissions import AllowAny
 from .models import User, PasswordResetToken
 from .serializers import UserSerializer, RegisterSerializer, LoginSerializer, PasswordResetRequestSerializer, PasswordResetConfirmSerializer
 from .utils import send_reset_email
+from django.conf import settings
 import logging
 
 logger = logging.getLogger('users')
+
+COOKIE_SECURE = not settings.DEBUG
+COOKIE_SAMESITE = 'None' if not settings.DEBUG else 'Lax'
 
 class RegisterView(APIView):
     permission_classes = [AllowAny]
@@ -29,8 +33,8 @@ class RegisterView(APIView):
                 key='refresh_token',
                 value=str(refresh),
                 httponly=True,
-                secure=False,  
-                samesite='Lax',
+                secure=COOKIE_SECURE,
+                samesite=COOKIE_SAMESITE,
                 max_age=7*24*60*60
             )
             return response
@@ -57,8 +61,8 @@ class LoginView(APIView):
                         key='refresh_token',
                         value=str(refresh),
                         httponly=True,
-                        secure=False,  
-                        samesite='Lax',
+                        secure=COOKIE_SECURE,
+                        samesite=COOKIE_SAMESITE,
                         max_age=7*24*60*60
                     )
                     return response
@@ -102,8 +106,8 @@ class RefreshTokenView(APIView):
                 key='refresh_token',
                 value=str(new_refresh),
                 httponly=True,
-                secure=False,
-                samesite='Lax',
+                secure=COOKIE_SECURE,
+                samesite=COOKIE_SAMESITE,
                 max_age=7*24*60*60
             )
             return response
